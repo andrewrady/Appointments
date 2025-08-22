@@ -1,5 +1,7 @@
-﻿using Appointments.Models;
+﻿using System.Security.Claims;
+using Appointments.Models;
 using Appointments.Representations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Appointments.Services;
@@ -7,20 +9,22 @@ namespace Appointments.Services;
 public class EventService : IEventService
 {
     private readonly ApplicationDbContext _context;
-
-    public EventService(ApplicationDbContext context)
+    private string userId;
+    
+    public EventService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
     {
         _context = context;
+        userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
     }
 
     public async Task<IEnumerable<Event>> GetAllEventsAsync()
     {
-        return await _context.Set<Event>().ToListAsync();
+        return await _context.Events.Where(x => x.ApplicationUserId == userId).ToListAsync();
     }
 
     public async Task<Event?> GetEventByIdAsync(int id)
     {
-        return await _context.Set<Event>().FindAsync(id);
+        return await _context.Events.FindAsync(id);
     }
 
     public async Task<Event> CreateEventAsync(EventCreateRequest request)
@@ -33,10 +37,12 @@ public class EventService : IEventService
             EndTime = request.EndTime,
             TimeZone = request.TimeZone,
             Source = "Internal",
-            Approved = true
+            Approved = true,
+            ApplicationUserId = userId
+            //ApplicationUserId = "d7d9700c-f5dd-495c-b427-0563bc76b8c9"
         };
 
-        _context.Set<Event>().Add(newEvent);
+        _context.Events.Add(newEvent);
         await _context.SaveChangesAsync();
         return newEvent;
     }

@@ -103,6 +103,10 @@ namespace Appointments.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<bool>("Approved")
                         .HasColumnType("bit");
 
@@ -133,6 +137,8 @@ namespace Appointments.Migrations
                         .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Events");
                 });
@@ -304,6 +310,17 @@ namespace Appointments.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Appointments.Models.Event", b =>
+                {
+                    b.HasOne("Appointments.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("Events")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -353,6 +370,11 @@ namespace Appointments.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Appointments.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }

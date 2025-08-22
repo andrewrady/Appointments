@@ -1,10 +1,12 @@
 ﻿using Appointments.Representations;
 using Appointments.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Appointments.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/events")]
 public class EventController(IEventService eventService) : ControllerBase
 {
