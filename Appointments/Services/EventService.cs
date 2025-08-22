@@ -9,22 +9,25 @@ namespace Appointments.Services;
 public class EventService : IEventService
 {
     private readonly ApplicationDbContext _context;
-    private string userId;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly string? _userId;
     
-    public EventService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, UserManager<ApplicationUser> userManager)
+    public EventService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
-        userId = userManager.GetUserId(httpContextAccessor.HttpContext.User);
+        _httpContextAccessor = httpContextAccessor;
+        _userId = _httpContextAccessor.HttpContext?.User.Claims
+            .LastOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
     }
 
     public async Task<IEnumerable<Event>> GetAllEventsAsync()
     {
-        return await _context.Events.Where(x => x.ApplicationUserId == userId).ToListAsync();
+        return await _context.Events.Where(x => x.ApplicationUserId == _userId).ToListAsync();
     }
 
     public async Task<Event?> GetEventByIdAsync(int id)
     {
-        return await _context.Events.FindAsync(id);
+        return await _context.Events.FirstOrDefaultAsync(x => x.Id == id && x.ApplicationUserId == _userId);
     }
 
     public async Task<Event> CreateEventAsync(EventCreateRequest request)
@@ -38,8 +41,7 @@ public class EventService : IEventService
             TimeZone = request.TimeZone,
             Source = "Internal",
             Approved = true,
-            ApplicationUserId = userId
-            //ApplicationUserId = "d7d9700c-f5dd-495c-b427-0563bc76b8c9"
+            ApplicationUserId = _userId
         };
 
         _context.Events.Add(newEvent);
@@ -50,7 +52,7 @@ public class EventService : IEventService
     public async Task<bool> UpdateEventAsync(int id, EventCreateRequest request)
     {
         
-        var existingEvent = await _context.Set<Event>().FindAsync(id);
+        var existingEvent = await _context.Events.FirstOrDefaultAsync(x => x.Id == id && x.ApplicationUserId == _userId);
         if (existingEvent == null)
             return false;
 
@@ -66,11 +68,11 @@ public class EventService : IEventService
 
     public async Task<bool> DeleteEventAsync(int id)
     {
-        var eventToDelete = await _context.Set<Event>().FindAsync(id);
+        var eventToDelete = await _context.Events.FirstOrDefaultAsync(x => x.Id == id && x.ApplicationUserId == _userId);
         if (eventToDelete == null)
             return false;
 
-        _context.Set<Event>().Remove(eventToDelete);
+        _context.Events.Remove(eventToDelete);
         await _context.SaveChangesAsync();
         return true;
     }
