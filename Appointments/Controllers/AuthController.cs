@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Appointments.Models;
+using Appointments.Representations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -67,19 +68,4 @@ public class AuthController : ControllerBase
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-}
-
-public class RegisterModel
-{
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
-    public string Username { get; set; }
-    public string Email { get; set; }
-    public string Password { get; set; }
-}
-
-public class LoginModel
-{
-    public string Username { get; set; }
-    public string Password { get; set; }
 }

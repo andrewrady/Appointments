@@ -14,7 +14,6 @@ public class Event
     [ForeignKey("ApplicationUserId")]
     public ApplicationUser ApplicationUser { get; set; }
 
-    [Required]
     [MaxLength(255)]
     public string? Title { get; set; }
 
